@@ -1,7 +1,9 @@
+import argparse
 import base64
 import json
 import typing as t
 import io
+import ipaddress
 
 import dash
 import dash.html as dhtml
@@ -214,4 +216,20 @@ def redraw_graph(selected_signals, raw_signals_json, preprocessed_json, time_lim
 
 
 if __name__ == '__main__':
-    app.run(debug=False, dev_tools_hot_reload=False)
+    parser = argparse.ArgumentParser(
+        description="Simple server configuration parser.",
+        usage="%(prog)s --host_ip <IP> --port <PORT> [--debug]"
+    )
+
+    parser.add_argument("--host_ip", type=lambda ip: ipaddress.ip_address(ip), default=ipaddress.ip_address("127.0.0.1"), help="IP address to listen to (e.g., 127.0.0.1 for local connections only, 192.168.1.1 specific interface or 0.0.0.0 for all).")
+    parser.add_argument("--port", type=int, default=8050, help="Port number where to listen (integer, e.g., 8080).")
+    parser.add_argument("--debug", action="store_true", default=False, help="Enable debug mode (default: False).")
+    args = parser.parse_args()
+
+    ipaddress.ip_address("127.0.0.1")
+
+    host_ip = str(args.host_ip)
+    port = args.port
+    debug = args.debug
+
+    app.run(debug=debug, port=port, host=host_ip, dev_tools_hot_reload=False, dev_tools_serve_dev_bundles=debug)
