@@ -122,6 +122,22 @@ def update_graph(ts_content, ts_filename):
     prevent_initial_call=True
 )
 def redraw_graph(selected_signals, raw_signals_json, preprocessed_json, time_limits_json, ski_events_json, estimated_class_json):
+    skisegments = {
+        "SkiSegments.uphill": {
+            "color_band": 1.0,
+            "text": "UPHILL"
+        },
+        "SkiSegments.downhill": {
+            "color_band": 0.0,
+            "text": "DOWNHILL"
+        },
+        "SkiSegments.other": {
+            "color_band": 0.5,
+            "text": "OTHER"
+        }
+    }
+
+
     fig = go.Figure()
     raw_signals: pd.DataFrame = pd.read_json(io.StringIO(raw_signals_json))
     time_axis_values = raw_signals.index.to_numpy() / 100.0
@@ -139,9 +155,10 @@ def redraw_graph(selected_signals, raw_signals_json, preprocessed_json, time_lim
     action_segments_x: np.ndarray = time_limits["segmentStartInSecs"].to_numpy(dtype=float)
     action_segments_x = np.append(action_segments_x, time_limits["segmentEndInSecs"].iloc[-1])
     action_segments_y = np.array([top_row_down, top_row_up])
-    action_segments_z = time_limits["categoryId"].map(lambda x: 1.0 if x == "SkiSegments.uphill" else 0.0).to_numpy()
+    action_segments_z = time_limits["categoryId"].map(lambda x: skisegments[x]["color_band"]).to_numpy()
     action_segments_z = np.reshape(action_segments_z, shape=[1, action_segments_z.shape[0]])
-    action_segments_texts = time_limits["categoryId"].map(lambda x: "UPHILL" if x == "SkiSegments.uphill" else "DOWNHILL").tolist()
+
+    action_segments_texts = time_limits["categoryId"].map(lambda x: skisegments[x]["text"]).tolist()
     action_segments_texts = [action_segments_texts]
 
     fig.add_trace(go.Heatmap(x=action_segments_x, y=action_segments_y, z=action_segments_z, colorscale=[[0.0, 'rgb(255,128,0)'], [1.0, 'rgb(128,255,0)']], showscale=False, text=action_segments_texts, hoverinfo='text', showlegend=False))
